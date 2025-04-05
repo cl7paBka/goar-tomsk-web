@@ -8,7 +8,7 @@ from src.api.routers import all_routers
 from src.utils.config import settings
 
 app = FastAPI(
-    title="Car Marketplace API"
+    title="Goar-Cafe-API"
 )
 
 for router in all_routers:  # Include routers into FastAPI app from src/api/routes (all of them in src/api/routers.py)
