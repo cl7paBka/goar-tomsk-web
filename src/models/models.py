@@ -17,8 +17,8 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from src.db.db import Base
-from src.utils.enums import UserRole, OrderStatus, MeatType, DeliveryType
-
+from src.schemas.user import UserRead
+from src.utils.enums import UserRole, OrderStatus, DeliveryType
 
 class TimestampMixin:
     """
@@ -36,11 +36,11 @@ class TimestampMixin:
 class User(Base, TimestampMixin):
     __tablename__ = "users"
     # TODO проверку на телефон сделать регуляркой для pydantic схемы и для БД, также проработать её под русский номер
-    __table_args__ = (
-        CheckConstraint(
-            "phone ~ '^[+]?[\d\\s\\-()]{7,20}$'", name="phone_format_check"
-        ),
-    )
+    # __table_args__ = (
+    #     CheckConstraint(
+    #         "phone ~ '^[+]?[\d\\s\\-()]{7,20}$'", name="phone_format_check"
+    #     ),
+    # )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -56,6 +56,19 @@ class User(Base, TimestampMixin):
     orders: Mapped[List["Order"]] = relationship(
         "Order", back_populates="user", cascade="all, delete-orphan"
     )
+
+    def to_read_model(self) -> UserRead:
+        addresses = [address.to_read_model() for address in self.addresses]
+        orders = [order.to_read_model() for order in self.orders]
+        return UserRead(
+            id=self.id,
+            name=self.name,
+            phone=self.phone,
+            email=self.email,
+            role=self.role,
+            addresses=addresses,
+            orders=orders
+        )
 
 
 # Таблица адресов пользователей
@@ -126,7 +139,6 @@ class Product(Base):
     )
     price: Mapped[float] = mapped_column(Float, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    has_meat_options: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     subcategory: Mapped["Category"] = relationship("Category", back_populates="products")
     order_items: Mapped[List["OrderItem"]] = relationship(
@@ -197,9 +209,7 @@ class OrderItem(Base):
     )
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     price: Mapped[float] = mapped_column(Float, nullable=False)
-    meat_type: Mapped[Optional[MeatType]] = mapped_column(
-        Enum(MeatType, name="meat_type"), nullable=True
-    )
+
 
     order: Mapped["Order"] = relationship("Order", back_populates="items")
     product: Mapped["Product"] = relationship("Product", back_populates="order_items")
