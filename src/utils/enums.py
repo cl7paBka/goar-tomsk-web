@@ -16,12 +16,6 @@ class OrderStatus(Enum):
     CANCELLED = "cancelled"
 
 
-class MeatType(Enum):
-    CHICKEN = "chicken"
-    PORK = "pork"
-    BEEF = "beef"
-
-
 class DeliveryType(Enum):
     DELIVERY = "delivery"
     PICKUP = "pickup"
